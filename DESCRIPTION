@@ -7,6 +7,6 @@ Author: Daniel Kirsner
 Maintainer: Daniel Kirsner<dkirsner@ucsc.edu>
 Description: This package implements the model from Kirsner and Sanso (2020), but using the first resolution as the base model for calculating the Bayes factor in the manner of Bayarri et al. (2012), and providing for the option of including a multivariate normal prior with mean zero and arbitrary covariance matrix for the first resolution coefficients, and providing an easy way to specify a Markov random field with a fixed precision as that prior.
 License: GPL (>= 3)
-Depends: R (>= 3.0), Matrix, fields, BAS, MASS, spam
-Imports: Rcpp (>= 1.0.2)
+Depends: R (>= 3.0)
+Imports: Rcpp (>= 1.0.2), , Matrix, fields, BAS, MASS, spam
 LinkingTo: Rcpp, RcppArmadillo

@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 .full_looper <- function(locations, yy, knots, previous_knot_res, maxiters, XX_old, sigmastar_old, mu, a_pi, b_pi, a_g, nu, max_dist, res_dist, init_log_marginal_lik, y_ssq, numthreads, pi_method, g_method, r2_old, m0_size) {
-    .Call(`_SSSS_full_looper`, locations, yy, knots, previous_knot_res, maxiters, XX_old, sigmastar_old, mu, a_pi, b_pi, a_g, nu, max_dist, res_dist, init_log_marginal_lik, y_ssq, numthreads, pi_method, g_method, r2_old, m0_size)
+    .Call(`_MSSS_full_looper`, locations, yy, knots, previous_knot_res, maxiters, XX_old, sigmastar_old, mu, a_pi, b_pi, a_g, nu, max_dist, res_dist, init_log_marginal_lik, y_ssq, numthreads, pi_method, g_method, r2_old, m0_size)
 }
 

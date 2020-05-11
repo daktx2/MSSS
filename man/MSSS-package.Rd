@@ -21,14 +21,10 @@ The DESCRIPTION file:
 Maintainer: \packageMaintainer{MSSS}
 }
 \references{
-~~ Literature or other references for background information ~~
+Kirsner, Daniel, and Bruno Sansó. "Multi-scale shotgun stochastic search for large spatial datasets." Computational Statistics & Data Analysis 146 (2020): 106931
 }
 ~~ Optionally other standard keywords, one per line, from file KEYWORDS in the R documentation directory ~~
 \keyword{ package }
-\seealso{
-~~ Optional links to other man pages, e.g. ~~
-~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~
-}
 \examples{
-~~ simple examples of the most important functions ~~
+#filler
 }

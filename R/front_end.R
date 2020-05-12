@@ -1,3 +1,10 @@
+#' Create Markov Random Field Precision matrix
+#' 
+#' @param knots_r1 1d vector or 2d matrix of knot locations.
+#' @param precision parameter, positive constant.
+#' @return nrow(knots_r1) square matrix with intrinsic MRF matrix.
+#' @examples
+#' Intrinsic_MRF_Prec(c(1,2,3),2)
 Intrinsic_MRF_Prec<-function(knots_r1,tau)
 {
   #create GMRF inverse covariance for resolution 1
@@ -10,6 +17,15 @@ Intrinsic_MRF_Prec<-function(knots_r1,tau)
   diag(WW)=-colSums(WW)+.01 #diagonal add noise
   return(WW*tau)
 }
+#' Create R1 knots on a grid a specificed number of knots wide
+#' 
+#' @param locations 1d vector or 2d matrix of locations of the data.
+#' @param spatial_dimension 1 or 2
+#' @param n_x how wide the grid should be in number of knots
+#' @param buffer how much wider should the grid be than then data range
+#' @return vector or n by 2 matrix of knot locations
+#' @examples
+#' Intrinsic_MRF_Prec(c(1,2,3),1,10,2)
 r1_create<-function(locations,spatial_dimension,n_x=10,buffer=0)
 {
   if(spatial_dimension==1)
@@ -32,7 +48,30 @@ r1_create<-function(locations,spatial_dimension,n_x=10,buffer=0)
     warning("spatial dimension must be 1 or 2")
   }
 }
-msss_fit<-function(locations, #locations of spatial observations
+
+#' Create R1 knots on a grid a specificed number of knots wide
+#' 
+#' @param locations locations of spatial observations.
+#' @param yy observation at each location
+#' @param knots_r1 locations of R1 knots, equally spaced grid, output of r1_create
+#' @param spatial_dimension dimension of the locations, should be 1 or 2
+#' @param maxiters number of iterations, default is 100
+#' @param cores number of cores for parallel processing, ~20 is optimal
+#' @param design_mat fixed effects, at least an intercept is recommended
+#' @param stopping_rule 'maxiter' is default, could be 'log likelihood' if you want it to exit early when finding no new models
+#' @param g_method 1 for hyper g, 1 i sdefault
+#' @param a_pi parameter 1 for beta binomial sparsity if pi_method=1, or numerator if pi_method=2, 1 is default
+#' @param b_pi parameter 2 for beta binomial sparsity if pi_method=1, or denominator if pi_method=2, 5 is default
+#' @param a_g   hyper g prior parameter, 3 is default, 2-4 recommended
+#' @param kernel_width bezier kernel width parameter, should be 1.5 or greater to be sensible, 1.5 is default
+#' @param nu bezier smoothness parameter, default is 1
+#' @param pi_method beta binomial is 1 (default), binomial (fixed pi) is 2
+#' @param R1_prior covariance matrix for R1 knots, default is NULL
+#' 
+#' @return large list, exists to be processed by the function msss_predict forsummaries and predictions
+#' @examples
+#' blank
+msss_fit<-function(locations,
                                            yy, #observation at each location
                                            knots_r1, #locations of R1 knots
                                            spatial_dimension, #dimension of the locations, should be 1 or 2

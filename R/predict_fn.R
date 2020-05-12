@@ -7,6 +7,17 @@
   K_kernel_temp = as.spam(K_kernel_temp)
   return(K_kernel_temp)
 }
+#' Predictions and summaries from msss_fit
+#' 
+#' @param locations 1d vector or 2d matrix of locations of the locations you'd like to predict at
+#' @param results output from msss_fit
+#' @param design_mat if fixed effects are part of the model, design matrix for the locations
+#' @param level confidence level, not always needed, .95 is defaykt
+#' @param model_used vector of how many top models to use for Bayesian model averaging, 1:100 is default, if slow try 1:10
+#' @param type 'pred' is default for prediction interval, 'mean' is interval for the mean, 'noint' is just a prediction without lower and upper bounds and is much faster, 'rescount' counts how many resoltuions are active at each point
+#' @return list with either a row matrix of predictions, a row matrix of resolutions active, or 3 row matricies with upper bounds, predicted values, and lower bound
+#' @examples
+#' FILLER
 msss_pred<-function(locations,results,design_mat=NULL,level=.95,model_used=1:100,type="pred")
 {
   nu=results$params$nu

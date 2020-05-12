@@ -1,34 +1,25 @@
-\name{MSSS-package}
-\alias{MSSS-package}
-\alias{MSSS}
 \docType{package}
-\title{
-\packageTitle{MSSS}
-}
+\name{MSSS}
+\alias{MSSS}
+\alias{MSSS-package}
+\title{MSSS: Multiresolution Shotgun Stochastic Search}
 \description{
-\packageDescription{MSSS}
+Package for fitting spatial models with multiresolution Kernel convolutions and spatially varying resolution.
 }
-\details{
 
-The DESCRIPTION file:
-\packageDESCRIPTION{MSSS}
-\packageIndices{MSSS}
-~~ An overview of how to use the package, including the most important functions ~~
+\references{
+Kirsner, Daniel, and Bruno Sansó. "Multi-scale shotgun stochastic search for large spatial datasets." Computational Statistics & Data Analysis 146 (2020): 106931.  \cr
+\url{https://www.sciencedirect.com/science/article/abs/pii/S0167947320300220}
+}
+\seealso{
+
+\code{\link{msss_fit}()},
+\code{\link{msss_pred}()},
+\code{\link{Intrinsic_MRF_Prec}()},
+\code{\link{r1_create}()}
 }
 \author{
-\packageAuthor{MSSS}
-
-Maintainer: \packageMaintainer{MSSS}
+Daniel Kirsner, \cr Maintainer: Daniel Kirsner <dkirsner@ucsc.edu>
 }
-\references{
-~~ Literature or other references for background information ~~
-}
-~~ Optionally other standard keywords, one per line, from file KEYWORDS in the R documentation directory ~~
-\keyword{ package }
-\seealso{
-~~ Optional links to other man pages, e.g. ~~
-~~ \code{\link[<pkg>:<pkg>-package]{<pkg>}} ~~
-}
-\examples{
-~~ simple examples of the most important functions ~~
-}
+\keyword{package}
+\keyword{spatial}

@@ -7,7 +7,7 @@
 msss_fit(locations, yy, knots_r1, spatial_dimension, maxiters = 100,
   cores = 1, design_mat = NULL, stopping_rule = "maxiter",
   g_method = 1, a_pi = 1, b_pi = 5, a_g = 3, kernel_width = 1.5,
-  nu = 1, pi_method = 1, R1_prior = NULL)
+  nu = 1, pi_method = 1, R1_prior = NULL, Kernel_type = "bezier")
 }
 \arguments{
 \item{locations}{locations of spatial observations.}
@@ -41,13 +41,12 @@ msss_fit(locations, yy, knots_r1, spatial_dimension, maxiters = 100,
 \item{pi_method}{beta binomial is 1 (default), binomial (fixed pi) is 2}
 
 \item{R1_prior}{covariance matrix for R1 knots, default is NULL}
+
+\item{Kernel_type}{either bezier or wendland}
 }
 \value{
 large list, exists to be processed by the function msss_predict forsummaries and predictions
 }
 \description{
 Create R1 knots on a grid a specificed number of knots wide
-}
-\examples{
-blank
 }

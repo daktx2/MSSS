@@ -118,20 +118,45 @@ arma::sp_mat create_column1(arma::mat knot,
                          int resolution,
                          arma::mat locations,
                          arma::vec max_dist,
-                         double nu)
+                         double nu,
+                         int Kernel_type_c)
 {
   arma::mat returner(locations.n_rows,1);
   returner.fill(0);
   returner=euclidean_cdist(locations,knot);
-  for(int j=0;j<(int)returner.n_elem;++j)
+  double ll=0;
+  ll=floor(((double)locations.n_cols)/2.0)+2.0;
+  /*Bezier stuff*/
+  if(Kernel_type_c==1)
   {
-    if(returner(j)>max_dist(resolution-1))
+  
+    for(int j=0;j<(int)returner.n_elem;++j)
     {
-      returner(j)=0;
+      if(returner(j)>max_dist(resolution-1))
+      {
+        returner(j)=0;
+      }
+      else
+      {
+        returner(j)=pow((1-pow(returner(j)/max_dist(resolution-1),2)),nu);
+      }
     }
-    else
+  }
+  /*Wendland stuff*/
+  if(Kernel_type_c==2)
+  {
+    
+    for(int j=0;j<(int)returner.n_elem;++j)
     {
-      returner(j)=pow((1-pow(returner(j)/max_dist(resolution-1),2)),nu);
+      if(returner(j)>max_dist(resolution-1))
+      {
+        returner(j)=0;
+      }
+      else
+      {
+
+        returner(j)=pow((1-returner(j)/max_dist(resolution-1)),ll)*(1+(ll+1)*returner(j)/max_dist(resolution-1));
+      }
     }
   }
   return(arma::sp_mat(returner));
@@ -540,7 +565,7 @@ plus_marginal_holder plus_marginal_fun1(arma::mat knot,
                                         arma::vec previous_knot_res,
                                         double a_pi,
                                         double b_pi,
-                                        int pi_method, int g_method, double r2_old, double m0_size)
+                                        int pi_method, int g_method, double r2_old, double m0_size, int Kernel_type_c)
 {
   arma::mat pot_knots(2*knot.n_cols,knot.n_cols);
   pot_knots.fill(0);
@@ -602,7 +627,7 @@ plus_marginal_holder plus_marginal_fun1(arma::mat knot,
       /*create new column*/
       arma::sp_mat XX_new_holder(locations.n_rows,1);
       arma::sp_mat XX_new(yy.n_rows,1);
-      XX_new_holder=create_column1(pot_knots.row(i),resolution+1,locations,max_dist,nu);
+      XX_new_holder=create_column1(pot_knots.row(i),resolution+1,locations,max_dist,nu,Kernel_type_c);
       XX_new.submat(0,0,locations.n_rows-1,0)=XX_new_holder;
       /*deal with empty columns*/
       if(XX_new.n_nonzero<5)
@@ -697,7 +722,7 @@ plus_marginal_holder plus_marginal_fun_parallel1(arma::mat knots,
                                                  double a_pi,
                                                  double b_pi,
                                                  int numthreads,
-                                                 int pi_method, int g_method, double r2_old, double m0_size)
+                                                 int pi_method, int g_method, double r2_old, double m0_size, int Kernel_type_c)
 {
   /*need to initialize mus, should be as many rows as there are potential knots*/
   /*needs max_knot number of columns, which is 100*(res1 knot count) so must calculate that*/
@@ -736,7 +761,7 @@ plus_marginal_holder plus_marginal_fun_parallel1(arma::mat knots,
                                                        previous_knot_res,
                                                        a_pi,
                                                        b_pi,
-                                                       pi_method, g_method,r2_old, m0_size);
+                                                       pi_method, g_method,r2_old, m0_size, Kernel_type_c);
 
 
 
@@ -946,7 +971,8 @@ List full_looper(arma::mat locations,
                  int pi_method,
                  int g_method,
                  double r2_old,
-                 double m0_size)
+                 double m0_size,
+                 int Kernel_type_c)
 {
   
   /*storage for top models by likelihood and their knots*/
@@ -998,7 +1024,7 @@ List full_looper(arma::mat locations,
     plus_marginal_holder temp;
 
     temp=plus_marginal_fun_parallel1(knots,locations,max_dist,nu,XX_old,sigmastar_old,mu,
-                                     yy,y_ssq,res_dist,a_g,previous_knot_res,a_pi,b_pi,numthreads,pi_method, g_method,r2_old,m0_size);
+                                     yy,y_ssq,res_dist,a_g,previous_knot_res,a_pi,b_pi,numthreads,pi_method, g_method,r2_old,m0_size, Kernel_type_c);
 
 
     plus_marginals=temp.plus_marginals;
@@ -1176,7 +1202,7 @@ List full_looper(arma::mat locations,
       /*How to extract the resolution of the parent knot*/
       int new_resolution=previous_knot_res(parent_col(plus_row(0)))+1;
       
-      XX_new_holder=create_column1(new_knots.row(0),new_resolution,locations,max_dist,nu);
+      XX_new_holder=create_column1(new_knots.row(0),new_resolution,locations,max_dist,nu,Kernel_type_c);
       
       XX_new.submat(0,0,locations.n_rows-1,0)=XX_new_holder;
       

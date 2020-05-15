@@ -1,10 +1,19 @@
-.create_column<-function (knot, resolution, locations, max_dist, nu) 
+.create_column<-function (knot, resolution, locations, max_dist, nu, Kernel_type, spatial_dimension) 
 {
-  temp = rdist(locations, knot)
-  K_kernel_temp = (1 - (temp/max_dist[resolution])^2)^nu
-  K_kernel_temp[is.nan(K_kernel_temp)] <- 0
-  K_kernel_temp[which(temp > max_dist[resolution])] <- 0
-  K_kernel_temp = as.spam(K_kernel_temp)
+  temp = fields::rdist(locations, knot)
+  if(Kernel_type=="bezier")
+  {
+    K_kernel_temp = (1 - (temp/max_dist[resolution])^2)^nu
+    K_kernel_temp[is.nan(K_kernel_temp)] <- 0
+    K_kernel_temp[which(temp > max_dist[resolution])] <- 0
+    K_kernel_temp = spam::as.spam(K_kernel_temp)
+  }
+  if(Kernel_type=="wendland")
+  {
+    ll=floor(spatial_dimension/2)+2
+    K_kernel_temp=(pmax(1-(temp/max_dist[resolution]),0))^{ll+1}
+    K_kernel_temp=K_kernel_temp*(1+(ll+1)*(temp/max_dist[resolution]))
+  }
   return(K_kernel_temp)
 }
 #' Predictions and summaries from msss_fit
@@ -20,6 +29,8 @@
 #' FILLER
 msss_pred<-function(locations,results,design_mat=NULL,level=.95,model_used=1:100,type="pred")
 {
+  Kernel_type=results$params$Kernel_type
+  spatial_dimension=results$params$spatial_dimension
   nu=results$params$nu
   niu=results$params$kernel_width
   spatial_dimension=results$params$spatial_dimension
@@ -42,10 +53,10 @@ msss_pred<-function(locations,results,design_mat=NULL,level=.95,model_used=1:100
     
     r1_knot_mindist=min(dist(knots_dataframe[which(knot_resolutions==1),]))
     maxdist=niu*r1_knot_mindist*((.5)^((0):99))
-    design_matrix=.create_column(knots_dataframe[1,1:results$params$spatial_dimension,drop=F],knot_resolutions[1],locations,maxdist,nu)
+    design_matrix=.create_column(knots_dataframe[1,1:results$params$spatial_dimension,drop=F],knot_resolutions[1],locations,maxdist,nu, Kernel_type, spatial_dimension)
     for(i in 2:dim(knots_dataframe)[1])
     {
-      design_matrix=cbind.spam(design_matrix,.create_column(knots_dataframe[i,1:results$params$spatial_dimension,drop=F],knot_resolutions[i],locations,maxdist,nu))
+      design_matrix=spam::cbind.spam(design_matrix,.create_column(knots_dataframe[i,1:results$params$spatial_dimension,drop=F],knot_resolutions[i],locations,maxdist,nu, Kernel_type, spatial_dimension))
     }
     #for resolution counting
     if(type=="rescount")
@@ -55,7 +66,7 @@ msss_pred<-function(locations,results,design_mat=NULL,level=.95,model_used=1:100
 
     if(is.null(design_mat)==F)
     {
-      design_matrix=cbind.spam(design_matrix,as.spam(design_mat))
+      design_matrix=spam::cbind.spam(design_matrix,spam::as.spam(design_mat))
     }
     muu=results$cpp_run$top_model_mus[modelno,]
     muu=muu[1:(dim(design_matrix)[2])]
@@ -63,28 +74,28 @@ msss_pred<-function(locations,results,design_mat=NULL,level=.95,model_used=1:100
     if(!(type %in%(c("rescount","noint"))))
     {
       #must reconstruct sigmahat for intervals
-      design_matrix_data=.create_column(knots_dataframe[1,1:results$params$spatial_dimension,drop=F],knot_resolutions[1],results$params$locations,maxdist,nu)
+      design_matrix_data=.create_column(knots_dataframe[1,1:results$params$spatial_dimension,drop=F],knot_resolutions[1],results$params$locations,maxdist,nu, Kernel_type, spatial_dimension)
       for(i in 2:dim(knots_dataframe)[1])
       {
-        design_matrix_data=cbind.spam(design_matrix_data,.create_column(knots_dataframe[i,1:results$params$spatial_dimension,drop=F],knot_resolutions[i],results$params$locations,maxdist,nu))
+        design_matrix_data=spam::cbind.spam(design_matrix_data,.create_column(knots_dataframe[i,1:results$params$spatial_dimension,drop=F],knot_resolutions[i],results$params$locations,maxdist,nu, Kernel_type, spatial_dimension))
       }
       if(is.null(design_mat)==F)
       {
         if(is.null(results$params$R1_prior))
         {
-          design_matrix_data=cbind.spam(design_matrix_data,as.spam(results$params$design_mat))
+          design_matrix_data=spam::cbind.spam(design_matrix_data,spam::as.spam(results$params$design_mat))
         }
         else{
           design_mat_r1_prior=matrix(0,dim(results$params$R1_prior)[1],ncol(design_matrix_data))
           design_mat_r1_prior[,which(knot_resolutions==1)]=chol(results$params$R1_prior)
           design_matrix_data=rbind(design_matrix_data,design_mat_r1_prior)
-          design_matrix_data=cbind.spam(design_matrix_data,as.spam(results$params$design_mat))
+          design_matrix_data=spam::cbind.spam(design_matrix_data,spam::as.spam(results$params$design_mat))
         }
         
       }
       pred_val_data=design_matrix_data%*%muu
-      choler=chol(crossprod.spam(design_matrix_data))
-      sigma_est=apply(forwardsolve.spam(choler,t(design_matrix))^2,2,sum)
+      choler=chol(spam::crossprod.spam(design_matrix_data))
+      sigma_est=apply(spam::forwardsolve.spam(choler,t(design_matrix))^2,2,sum)
       random.error=sum((results$params$yy_spam-pred_val_data)^2)/length(results$params$yy_spam)
     }
     

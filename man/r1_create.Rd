@@ -21,6 +21,3 @@ vector or n by 2 matrix of knot locations
 \description{
 Create R1 knots on a grid a specificed number of knots wide
 }
-\examples{
-Intrinsic_MRF_Prec(c(1,2,3),1,10,2)
-}

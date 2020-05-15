@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // full_looper
-List full_looper(arma::mat locations, arma::mat yy, arma::mat knots, arma::vec previous_knot_res, arma::uword maxiters, arma::SpMat<double> XX_old, arma::SpMat<double> sigmastar_old, arma::SpMat<double> mu, double a_pi, double b_pi, double a_g, double nu, arma::vec max_dist, arma::vec res_dist, double init_log_marginal_lik, double y_ssq, arma::uword numthreads, int pi_method, int g_method, double r2_old, double m0_size);
-RcppExport SEXP _MSSS_full_looper(SEXP locationsSEXP, SEXP yySEXP, SEXP knotsSEXP, SEXP previous_knot_resSEXP, SEXP maxitersSEXP, SEXP XX_oldSEXP, SEXP sigmastar_oldSEXP, SEXP muSEXP, SEXP a_piSEXP, SEXP b_piSEXP, SEXP a_gSEXP, SEXP nuSEXP, SEXP max_distSEXP, SEXP res_distSEXP, SEXP init_log_marginal_likSEXP, SEXP y_ssqSEXP, SEXP numthreadsSEXP, SEXP pi_methodSEXP, SEXP g_methodSEXP, SEXP r2_oldSEXP, SEXP m0_sizeSEXP) {
+List full_looper(arma::mat locations, arma::mat yy, arma::mat knots, arma::vec previous_knot_res, arma::uword maxiters, arma::SpMat<double> XX_old, arma::SpMat<double> sigmastar_old, arma::SpMat<double> mu, double a_pi, double b_pi, double a_g, double nu, arma::vec max_dist, arma::vec res_dist, double init_log_marginal_lik, double y_ssq, arma::uword numthreads, int pi_method, int g_method, double r2_old, double m0_size, int Kernel_type_c);
+RcppExport SEXP _MSSS_full_looper(SEXP locationsSEXP, SEXP yySEXP, SEXP knotsSEXP, SEXP previous_knot_resSEXP, SEXP maxitersSEXP, SEXP XX_oldSEXP, SEXP sigmastar_oldSEXP, SEXP muSEXP, SEXP a_piSEXP, SEXP b_piSEXP, SEXP a_gSEXP, SEXP nuSEXP, SEXP max_distSEXP, SEXP res_distSEXP, SEXP init_log_marginal_likSEXP, SEXP y_ssqSEXP, SEXP numthreadsSEXP, SEXP pi_methodSEXP, SEXP g_methodSEXP, SEXP r2_oldSEXP, SEXP m0_sizeSEXP, SEXP Kernel_type_cSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -33,13 +33,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type g_method(g_methodSEXP);
     Rcpp::traits::input_parameter< double >::type r2_old(r2_oldSEXP);
     Rcpp::traits::input_parameter< double >::type m0_size(m0_sizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(full_looper(locations, yy, knots, previous_knot_res, maxiters, XX_old, sigmastar_old, mu, a_pi, b_pi, a_g, nu, max_dist, res_dist, init_log_marginal_lik, y_ssq, numthreads, pi_method, g_method, r2_old, m0_size));
+    Rcpp::traits::input_parameter< int >::type Kernel_type_c(Kernel_type_cSEXP);
+    rcpp_result_gen = Rcpp::wrap(full_looper(locations, yy, knots, previous_knot_res, maxiters, XX_old, sigmastar_old, mu, a_pi, b_pi, a_g, nu, max_dist, res_dist, init_log_marginal_lik, y_ssq, numthreads, pi_method, g_method, r2_old, m0_size, Kernel_type_c));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_MSSS_full_looper", (DL_FUNC) &_MSSS_full_looper, 21},
+    {"_MSSS_full_looper", (DL_FUNC) &_MSSS_full_looper, 22},
     {NULL, NULL, 0}
 };
 

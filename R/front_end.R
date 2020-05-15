@@ -24,8 +24,6 @@ Intrinsic_MRF_Prec<-function(knots_r1,tau)
 #' @param n_x how wide the grid should be in number of knots
 #' @param buffer how much wider should the grid be than then data range
 #' @return vector or n by 2 matrix of knot locations
-#' @examples
-#' Intrinsic_MRF_Prec(c(1,2,3),1,10,2)
 r1_create<-function(locations,spatial_dimension,n_x=10,buffer=0)
 {
   if(spatial_dimension==1)
@@ -67,10 +65,8 @@ r1_create<-function(locations,spatial_dimension,n_x=10,buffer=0)
 #' @param nu bezier smoothness parameter, default is 1
 #' @param pi_method beta binomial is 1 (default), binomial (fixed pi) is 2
 #' @param R1_prior covariance matrix for R1 knots, default is NULL
-#' 
+#' @param Kernel_type either bezier or wendland
 #' @return large list, exists to be processed by the function msss_predict forsummaries and predictions
-#' @examples
-#' blank
 msss_fit<-function(locations,
                                            yy, #observation at each location
                                            knots_r1, #locations of R1 knots
@@ -87,15 +83,23 @@ msss_fit<-function(locations,
                                            b_pi=5,                  #parameter 2 for beta binomial sparsity if pi_method=1, or denominator if pi_method=2
                                            a_g=3,                   #if hyper g, we have a parameter here, means different in Bayarri
                                            kernel_width=1.5,        #bezier kernel width parameter, should be 1.5 or greater to be sensible
-                                           nu=1,                    #bezier smoothness parameter
+                                           nu=1,                    #bezier smoothness parameter, not needed if wendland
                                            pi_method=1,              #beta binomial is 1
-                                           R1_prior=NULL            #covariance matrix for R1 knots
+                                           R1_prior=NULL,            #covariance matrix for R1 knots
+                                            Kernel_type="bezier"     #kind of kernel, could also be wendland (others could be implemented)
 )      
 {
   start=proc.time()
   #bezier kernel for initial knots_r1
   niu=kernel_width
-  
+  if(Kernel_type=="bezier")
+  {
+    Kernel_type_c=1
+  }
+  if(Kernel_type=="wendland")
+  {
+    Kernel_type_c=2
+  }
   #number of possible kernels
   p=2^spatial_dimension
   #maximum distance for compact kernels at each resolution
@@ -104,9 +108,18 @@ msss_fit<-function(locations,
   resolution_dist=min(dist(knots_r1))*((.5)^((0):99))
   
   #form design matrix for R1
-  K_dists_r1=rdist(locations,knots_r1)
-  K_kernel_r1=(1-(K_dists_r1/max_dist[1])^2)^nu
-  K_kernel_r1[which(K_dists_r1>max_dist[1])]<-0
+  K_dists_r1=fields::rdist(locations,knots_r1)
+  if(Kernel_type=="bezier")
+  {
+    K_kernel_r1=(1-(K_dists_r1/max_dist[1])^2)^nu
+    K_kernel_r1[which(K_dists_r1>max_dist[1])]<-0
+  }
+  if(Kernel_type=="wendland")
+  {
+    ll=floor(spatial_dimension/2)+2
+    K_kernel_r1=(pmax(1-(K_dists_r1/max_dist[1]),0))^{ll+1}
+    K_kernel_r1=K_kernel_r1*(1+(ll+1)*(K_dists_r1/max_dist[1]))
+  }
   #if there is no R1 prior then we need to exclude empty columns
   #we also exclude near empty columns for stability
   if(is.null(R1_prior))
@@ -135,12 +148,38 @@ msss_fit<-function(locations,
       XX=K_kernel_r1
     }
     
-    XX_spam=as.spam(XX)
+    XX_spam=spam::as.spam(XX)
   }else{
     if(dim(R1_prior)[1]!=dim(K_kernel_r1)[2])
     {stop("Prior is not same dimension as J(1)")}
-    XX=K_kernel_r1
-    XX_spam=as.spam(XX)
+    
+    
+    #bad knots are where there are fewer than 5 datapoints in the kernel
+    bad_knot_index=which(apply(K_kernel_r1!=0,2,sum)<5)
+    if(spatial_dimension==2){
+      bad_knots=knots_r1[bad_knot_index,]
+    }
+    if(spatial_dimension==1){
+      bad_knots=knots_r1[bad_knot_index]
+    }
+    if(length(bad_knot_index)>0&spatial_dimension==2)
+    {
+      knots_r1=knots_r1[-bad_knot_index,]
+      XX=K_kernel_r1[,-bad_knot_index]
+      R1_prior=R1_prior[-bad_knot_index,-bad_knot_index]
+    }
+    if(length(bad_knot_index)>0&spatial_dimension==1)
+    {
+      knots_r1=knots_r1[-bad_knot_index]
+      XX=K_kernel_r1[,-bad_knot_index]
+      R1_prior=R1_prior[-bad_knot_index,-bad_knot_index]
+    }
+    if(length(bad_knot_index)==0)
+    {
+      XX=K_kernel_r1
+    }
+    
+    XX_spam=spam::as.spam(XX)
     choler=chol(R1_prior)
     yy=c(yy,rep(0,dim(R1_prior)[1]))
     XX=rbind(XX,choler)
@@ -156,13 +195,13 @@ msss_fit<-function(locations,
   if(is.null(design_mat)==F)
   {
     XX=cbind(XX,design_mat)
-    XX_spam=cbind.spam(XX_spam,as.spam(design_mat))
+    XX_spam=spam::cbind.spam(XX_spam,spam::as.spam(design_mat))
   }
   
   #start with just r1 knots, fit linear model, extract design matrix and coefficients/cov mat
   lm_temp=lm(as.numeric(as.matrix(yy))~XX+0)
-  sigmastar_old=as.spam(vcov(lm_temp)/(summary(lm_temp)$sigma^2))
-  mu=as.spam(coef(lm_temp))
+  sigmastar_old=spam::as.spam(vcov(lm_temp)/(summary(lm_temp)$sigma^2))
+  mu=spam::as.spam(coef(lm_temp))
   XX_old=XX_spam
   y_ssq=sum((yy-mean(as.numeric(as.matrix(yy))))^2)
   r2_old=1-sum((yy-XX_old%*%mu)^2)/y_ssq
@@ -235,7 +274,7 @@ msss_fit<-function(locations,
   
   params=list(locations=locations,yy=yy,knots_r1=knots_r1,maxiters=maxiters,spatial_dimension=spatial_dimension,
               stopping_rule=stopping_rule,pi_method=pi_method,g_method=g_method,a_pi=a_pi,b_pi=b_pi,
-              a_g=a_g,kernel_width=kernel_width,nu=nu,design_mat=design_mat,R1_prior=R1_prior)
+              a_g=a_g,kernel_width=kernel_width,nu=nu,design_mat=design_mat,R1_prior=R1_prior,Kernel_type=Kernel_type)
   #here we will do the data augmentation for the proper prior on the first resolution
   
   #now comes the iterative part
@@ -248,9 +287,9 @@ msss_fit<-function(locations,
                         unname(as.matrix(knots_r1)),
                         resolution,
                         maxiters,
-                        as.dgRMatrix.spam(XX_old),
-                        as.dgRMatrix.spam(sigmastar_old),
-                        as.dgRMatrix.spam(mu),
+                        spam::as.dgRMatrix.spam(XX_old),
+                        spam::as.dgRMatrix.spam(sigmastar_old),
+                        spam::as.dgRMatrix.spam(mu),
                         a_pi,
                         b_pi,
                         a_g,
@@ -263,7 +302,8 @@ msss_fit<-function(locations,
                         pi_method,
                         g_method,
                         r2_old,
-                        m0_size=dim(XX_old)[2]
+                        m0_size=dim(XX_old)[2],
+                        Kernel_type_c
     )
   }
   
@@ -274,9 +314,9 @@ msss_fit<-function(locations,
                         unname(as.matrix(knots_r1)),
                         resolution,
                         maxiters,
-                        as.dgRMatrix.spam(XX_old),
-                        as.dgRMatrix.spam(sigmastar_old),
-                        as.dgRMatrix.spam(mu),
+                        spam::as.dgRMatrix.spam(XX_old),
+                        spam::as.dgRMatrix.spam(sigmastar_old),
+                        spam::as.dgRMatrix.spam(mu),
                         a_pi,
                         b_pi,
                         a_g,
@@ -289,7 +329,8 @@ msss_fit<-function(locations,
                         pi_method,
                         g_method,
                         r2_old,
-                        m0_size=dim(XX_old)[2]
+                        m0_size=dim(XX_old)[2],
+                        Kernel_type_c
     )
   }
   runtime=proc.time()-start

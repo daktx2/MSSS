@@ -17,6 +17,7 @@ Kirsner, Daniel, and Bruno Sansó. "Multi-scale shotgun stochastic search for lar
 \code{\link{msss_pred}()},
 \code{\link{Intrinsic_MRF_Prec}()},
 \code{\link{r1_create}()}
+\code{\link{mr_optim_fit}()}
 }
 \author{
 Daniel Kirsner, \cr Maintainer: Daniel Kirsner <dkirsner@ucsc.edu>

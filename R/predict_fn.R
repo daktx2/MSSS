@@ -96,7 +96,7 @@ msss_pred<-function(locations,results,design_mat=NULL,level=.95,model_used=1:100
       pred_val_data=design_matrix_data%*%muu
       choler=chol(spam::crossprod.spam(design_matrix_data))
       sigma_est=apply(spam::forwardsolve.spam(choler,t(design_matrix))^2,2,sum)
-      random.error=sum((results$params$yy-pred_val_data)^2)/length(results$params$yy)
+      random.error=sum((results$params$yy_spam-pred_val_data)^2)/length(results$params$yy_spam)
     }
     
     if(type=="pred") {SE_Preds=sqrt((sigma_est+1)*random.error)}
